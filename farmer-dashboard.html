@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmer Dashboard — Farm Direct</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body class="app-shell">
+
+<div class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="brand" style="font-size:19px;">Farm Direct</a>
+    <div class="who">
+      <span id="who-name">Loading…</span>
+      <div class="avatar" id="avatar">F</div>
+      <a href="#" onclick="logout()" style="color:var(--sage-300);margin-left:6px;font-size:13px;">Log out</a>
+    </div>
+  </div>
+</div>
+
+<div class="dash-wrap">
+  <div class="dash-head">
+    <div>
+      <h1>Farmer Dashboard</h1>
+      <p id="head-sub">Here's how your farm is doing today.</p>
+    </div>
+    <button class="btn btn-marigold" onclick="openAddModal()">+ Add Produce</button>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="label">Today's Sales</div>
+      <div class="value" id="stat-sales">₹0</div>
+      <div class="sub" id="stat-sales-sub">—</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Active Orders</div>
+      <div class="value" id="stat-orders">0</div>
+      <div class="sub">pending + confirmed</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Products Listed</div>
+      <div class="value" id="stat-products">0</div>
+      <div class="sub" id="stat-products-sub">—</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div style="display:flex;flex-direction:column;gap:22px;">
+
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab active" data-tab="products" onclick="switchTab('products')">My Produce</div>
+          <div class="tab" data-tab="orders" onclick="switchTab('orders')">Orders</div>
+          <div class="tab" data-tab="analytics" onclick="switchTab('analytics')">Analytics</div>
+        </div>
+
+        <div id="tab-products">
+          <table>
+            <thead><tr><th>Produce</th><th>Stock</th><th>Your Price</th><th>AI Suggests</th><th>Quality</th><th></th></tr></thead>
+            <tbody id="products-body"></tbody>
+          </table>
+        </div>
+
+        <div id="tab-orders" style="display:none;">
+          <table>
+            <thead><tr><th>Customer</th><th>Produce</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+
+        <div id="tab-analytics" style="display:none;">
+          <canvas id="salesChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:22px;">
+      <div class="panel">
+        <h2>🧠 AI Insights</h2>
+        <p class="panel-sub">Auto-generated from demand &amp; price signals</p>
+        <div id="insights-list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>💬 AI Farmer Assistant</h2>
+        <p class="panel-sub">Ask about pricing, demand, or quantity</p>
+        <div id="chat-log" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="chat-input" type="text" placeholder="What price should I sell my tomatoes for?" style="flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary btn-sm" onclick="sendChat()">Ask</button>
+        </div>
+        <div class="chip-row" style="margin-top:10px;">
+          <span class="chip" onclick="quickChat('What price should I sell my tomatoes for?')">Price help</span>
+          <span class="chip" onclick="quickChat('What products are in high demand?')">Demand</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Produce Modal -->
+<div class="modal-backdrop" id="add-modal">
+  <div class="modal">
+    <h3>Add Produce</h3>
+    <p style="color:var(--soil-700);font-size:13.5px;margin-bottom:20px;">Fill in the details — AI will suggest a price and demand estimate once you save.</p>
+
+    <div class="form-row">
+      <label>Produce name</label>
+      <select id="f-name">
+        <option>Tomato</option><option>Carrot</option><option>Spinach</option><option>Cucumber</option>
+        <option>Mango (Alphonso)</option><option>Banana</option><option>Brinjal</option><option>Rice (Ponni)</option><option>Papaya</option>
+      </select>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Quantity</label>
+        <input id="f-qty" type="number" value="50" min="1">
+      </div>
+      <div class="form-row">
+        <label>Unit</label>
+        <select id="f-unit"><option>kg</option><option>bunch</option><option>dozen</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Your listing price (₹)</label>
+      <input id="f-price" type="number" value="25" min="1">
+    </div>
+    <div class="form-row">
+      <label>Upload photo (for AI quality check)</label>
+      <input id="f-photo" type="file" accept="image/*" onchange="runQualityCheck()">
+      <div id="quality-result" style="margin-top:10px;display:none;"></div>
+    </div>
+
+    <div id="ai-preview" style="display:none;margin-bottom:18px;"></div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost btn-block" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-marigold btn-block" onclick="saveProduce()">Publish Listing</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const session = requireSession('farmer');
+  let myListed = []; // locally-added listings for this demo session
+
+  function init() {
+    document.getElementById('who-name').innerHTML = `Logged in as <b>${session.name}</b>`;
+    document.getElementById('avatar').textContent = session.name.charAt(0);
+    document.getElementById('head-sub').textContent = `${session.location || 'Your farm'} · here's how things look today.`;
+    renderProducts();
+    renderOrders();
+    renderInsights();
+    renderStats();
+    seedChat();
+  }
+
+  function myProducts() {
+    return PRODUCTS.filter(p => p.farmerId === session.farmerId).concat(myListed);
+  }
+
+  function renderProducts() {
+    const body = document.getElementById('products-body');
+    body.innerHTML = myProducts().map(p => {
+      const pred = AI.predictPrice(p);
+      return `<tr>
+        <td>${p.emoji} <b>${p.name}</b></td>
+        <td>${p.stock} ${p.unit}</td>
+        <td>₹${p.basePrice}</td>
+        <td style="color:var(--marigold-500);font-family:var(--font-mono);">₹${pred.low}–₹${pred.high}</td>
+        <td><span class="pill ${p.quality}">${p.quality}</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="applyAiPrice('${p.id}', ${pred.mid})">Use AI price</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('stat-products').textContent = myProducts().length;
+    document.getElementById('stat-products-sub').textContent = `${myProducts().filter(p=>p.quality==='fresh').length} marked fresh`;
+  }
+
+  function applyAiPrice(id, price) {
+    const p = findProduct(id) || myListed.find(x => x.id === id);
+    if (p) { p.basePrice = price; renderProducts(); toast(`Price updated to ₹${price}`); }
+  }
+
+  function renderOrders() {
+    const mine = ORDERS.filter(o => o.farmerId === session.farmerId);
+    document.getElementById('orders-body').innerHTML = mine.map(o => {
+      const p = findProduct(o.productId);
+      return `<tr>
+        <td>${o.customer}</td>
+        <td>${p.emoji} ${p.name}</td>
+        <td>${o.qty} ${o.unit}</td>
+        <td>₹${o.total}</td>
+        <td><span class="pill ${o.status}">${o.status}</span></td>
+      </tr>`;
+    }).join('');
+    const active = mine.filter(o => o.status !== 'delivered').length;
+    document.getElementById('stat-orders').textContent = active;
+    const salesToday = mine.filter(o => o.date === '2026-08-29' || o.status !== 'pending').reduce((s,o)=>s+o.total,0);
+    document.getElementById('stat-sales').textContent = `₹${salesToday.toLocaleString('en-IN')}`;
+    document.getElementById('stat-sales-sub').textContent = `across ${mine.length} orders`;
+  }
+
+  function renderInsights() {
+    const list = document.getElementById('insights-list');
+    const items = myProducts().map(p => {
+      const d = AI.forecastDemand(p);
+      const pred = AI.predictPrice(p);
+      return { p, d, pred };
+    }).sort((a,b) => b.d.score - a.d.score).slice(0, 4);
+
+    list.innerHTML = items.map(({p,d,pred}) => `
+      <div class="insight">
+        <span class="emoji">${p.emoji}</span>
+        <div class="txt">
+          <b>${p.name} demand: ${d.level}</b>
+          <span>Suggested price ₹${pred.mid}/${p.unit} · ~${d.expectedKg} ${p.unit} expected this week</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderStats() { /* placeholder for future live-refresh */ }
+
+  function switchTab(name) {
+    ['products','orders','analytics'].forEach(t => {
+      document.getElementById('tab-'+t).style.display = t === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === name));
+    if (name === 'analytics') drawChart();
+  }
+
+  let chartDrawn = false;
+  function drawChart() {
+    if (chartDrawn) return;
+    chartDrawn = true;
+    const ctx = document.getElementById('salesChart');
+    const labels = myProducts().map(p => p.name);
+    const data = myProducts().map(p => AI.predictPrice(p).mid * (p.stock * 0.3));
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Projected weekly revenue (₹)', data, backgroundColor: '#e0972e', borderRadius: 6 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  /* ---- Add produce modal ---- */
+  function openAddModal(){ document.getElementById('add-modal').classList.add('open'); document.getElementById('ai-preview').style.display='none'; document.getElementById('quality-result').style.display='none'; }
+  function closeAddModal(){ document.getElementById('add-modal').classList.remove('open'); }
+
+  function runQualityCheck() {
+    const file = document.getElementById('f-photo').files[0];
+    const box = document.getElementById('quality-result');
+    box.style.display = 'block';
+    box.innerHTML = `<span style="font-size:13px;color:var(--soil-700);">Analysing photo…</span>`;
+    setTimeout(() => {
+      const result = AI.classifyQuality(file ? file.name : 'produce');
+      box.innerHTML = `<span class="pill ${result.label}">${result.label}</span> <span style="font-size:12.5px;color:var(--soil-700);margin-left:6px;">${result.confidence}% confidence · appearance-based, not a food-safety test</span>`;
+    }, 700);
+  }
+
+  function saveProduce() {
+    const name = document.getElementById('f-name').value;
+    const qty = parseInt(document.getElementById('f-qty').value) || 10;
+    const unit = document.getElementById('f-unit').value;
+    const price = parseInt(document.getElementById('f-price').value) || 20;
+    const emojiMap = {Tomato:'🍅',Carrot:'🥕',Spinach:'🥬',Cucumber:'🥒','Mango (Alphonso)':'🥭',Banana:'🍌',Brinjal:'🍆','Rice (Ponni)':'🌾',Papaya:'🍈'};
+
+    const newP = {
+      id: 'local-' + Date.now(), farmerId: session.farmerId, name, category: 'Vegetables',
+      emoji: emojiMap[name] || '🌿', basePrice: price, unit, stock: qty, quality: 'fresh', harvest: 'today'
+    };
+    myListed.push(newP);
+    closeAddModal();
+    renderProducts();
+    renderInsights();
+    const pred = AI.predictPrice(newP);
+    toast(`Listed! AI suggests ₹${pred.low}–₹${pred.high}/${unit}`, '🌱');
+  }
+
+  /* ---- AI assistant chat ---- */
+  function seedChat() {
+    addChatMsg('ai', `Hi ${session.name.split(' ')[0]}, ask me about pricing, demand, or how much to list.`);
+  }
+  function addChatMsg(who, text) {
+    const log = document.getElementById('chat-log');
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `font-size:13.5px;line-height:1.5;padding:10px 12px;border-radius:10px;max-width:92%;
+      ${who==='ai' ? 'background:var(--paper-100);align-self:flex-start;' : 'background:var(--soil-900);color:#fff;align-self:flex-end;'}`;
+    bubble.textContent = text;
+    log.appendChild(bubble);
+    log.scrollTop = log.scrollHeight;
+  }
+  function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    addChatMsg('user', msg);
+    input.value = '';
+    setTimeout(() => addChatMsg('ai', AI.assistantReply(msg, myProducts())), 400);
+  }
+  function quickChat(msg) { document.getElementById('chat-input').value = msg; sendChat(); }
+
+  function logout() { Store.clearSession(); window.location.href = 'index.html'; }
+
+  if (session) init();
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Farm Direct</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <a href="index.html" class="brand" style="margin-bottom:22px;justify-content:center;">Farm Direct</a>
+
+    <div class="role-toggle">
+      <button id="tab-farmer" class="active" onclick="setRole('farmer')">👨‍🌾 Farmer</button>
+      <button id="tab-customer" onclick="setRole('customer')">🛒 Customer</button>
+    </div>
+
+    <div id="mode-login">
+      <h3 id="login-title" style="margin-bottom:4px;">Welcome back, Farmer</h3>
+      <p style="color:var(--soil-700);font-size:13.5px;margin-bottom:22px;">Prototype login — no real credentials needed. Just enter a name.</p>
+
+      <div class="form-row">
+        <label>Full name</label>
+        <input id="name-input" type="text" placeholder="e.g. Murugan K." value="Murugan K.">
+      </div>
+      <div class="form-row">
+        <label>Phone number</label>
+        <input id="phone-input" type="text" placeholder="98xxxxxxxx" value="98765 43210">
+      </div>
+      <div id="farmer-only" class="form-row">
+        <label>Location</label>
+        <input id="loc-input" type="text" placeholder="e.g. Thanjavur, TN" value="Thanjavur, TN">
+      </div>
+
+      <button class="btn btn-marigold btn-block" onclick="doLogin()">Continue →</button>
+
+      <p style="text-align:center;font-size:13px;color:var(--soil-700);margin-top:18px;">
+        This is a demo — any name will work, no signup needed.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  let role = 'farmer';
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('role') === 'customer') role = 'customer';
+
+  function setRole(r) {
+    role = r;
+    document.getElementById('tab-farmer').classList.toggle('active', r === 'farmer');
+    document.getElementById('tab-customer').classList.toggle('active', r === 'customer');
+    document.getElementById('login-title').textContent = r === 'farmer' ? 'Welcome back, Farmer' : 'Welcome back!';
+    document.getElementById('farmer-only').style.display = r === 'farmer' ? 'block' : 'none';
+    document.getElementById('name-input').value = r === 'farmer' ? 'Murugan K.' : 'Anitha S.';
+  }
+  setRole(role);
+
+  function doLogin() {
+    const name = document.getElementById('name-input').value.trim() || (role === 'farmer' ? 'Murugan K.' : 'Guest Customer');
+    const phone = document.getElementById('phone-input').value.trim();
+    const location = document.getElementById('loc-input').value.trim();
+    Store.setSession({ role, name, phone, location, farmerId: role === 'farmer' ? 'f1' : null });
+    window.location.href = role === 'farmer' ? 'farmer-dashboard.html' : 'marketplace.html';
+  }
+</script>
+</body>
+</html>

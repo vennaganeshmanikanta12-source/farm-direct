@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace — Farm Direct</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-shell">
+
+<div class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="brand" style="font-size:19px;">Farm Direct</a>
+    <div class="who">
+      <span id="who-name">Browsing as guest</span>
+      <a href="#" onclick="openCart()" style="position:relative;color:#fff;display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;">
+        🛒 Cart
+        <span id="cart-count" style="display:none;background:var(--marigold-500);color:var(--soil-950);font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;">0</span>
+      </a>
+      <a href="#" id="logout-link" onclick="logout()" style="color:var(--sage-300);font-size:13px;">Log out</a>
+    </div>
+  </div>
+</div>
+
+<div class="dash-wrap">
+  <div class="dash-head">
+    <div>
+      <h1 id="greeting">Fresh from the farm today</h1>
+      <p>Straight from verified farmers near you — AI-ranked for freshness and demand.</p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:24px;">
+    <h2 style="font-size:15px;">🧠 Recommended for you</h2>
+    <p class="panel-sub">Based on what's fresh and trending right now</p>
+    <div class="rec-strip" id="rec-strip"></div>
+  </div>
+
+  <div class="market-toolbar">
+    <div class="search-box">
+      <span class="ic">🔍</span>
+      <input id="search-input" type="text" placeholder="Search vegetables, fruits, grains…" oninput="renderProducts()">
+    </div>
+    <div class="chip-row" id="category-chips"></div>
+  </div>
+
+  <div class="product-grid" id="product-grid"></div>
+</div>
+
+<!-- Cart Drawer -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-head">
+    <h3 style="font-size:19px;">Your Cart</h3>
+    <button class="btn btn-ghost btn-sm" onclick="closeCart()">Close</button>
+  </div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-foot">
+    <div class="total-row"><span>Total</span><span id="cart-total">₹0</span></div>
+    <button class="btn btn-marigold btn-block" onclick="checkout()">Place Order</button>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal-backdrop" id="detail-modal">
+  <div class="modal" style="position:relative;">
+    <button onclick="closeDetail()" style="position:absolute;top:18px;right:18px;background:var(--paper-100);border:none;width:30px;height:30px;border-radius:50%;font-size:15px;color:var(--soil-700);">✕</button>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const session = Store.getSession();
+  if (session && session.role === 'customer') {
+    document.getElementById('who-name').innerHTML = `Hi, <b style="color:#fff;">${session.name.split(' ')[0]}</b>`;
+    document.getElementById('greeting').textContent = `Fresh from the farm, ${session.name.split(' ')[0]}`;
+  } else {
+    document.getElementById('logout-link').textContent = 'Log in';
+    document.getElementById('logout-link').onclick = () => window.location.href = 'login.html?role=customer';
+  }
+
+  let activeCategory = 'All';
+
+  function renderChips() {
+    const el = document.getElementById('category-chips');
+    const cats = ['All', ...CATEGORIES];
+    el.innerHTML = cats.map(c => `<span class="chip ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${c}</span>`).join('');
+  }
+  function setCategory(c) { activeCategory = c; renderChips(); renderProducts(); }
+
+  function renderRecommendations() {
+    const picks = AI.recommend(document.getElementById('search-input')?.value || '', 5);
+    document.getElementById('rec-strip').innerHTML = picks.map(p => `
+      <div class="rec-chip" onclick="openDetail('${p.id}')" style="cursor:pointer;">
+        <span style="font-size:20px;">${p.emoji}</span>
+        <div>
+          <div>${p.name}</div>
+          <div style="font-size:11.5px;color:var(--sage-500);">₹${AI.predictPrice(p).mid}/${p.unit}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderProducts() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    let list = PRODUCTS.filter(p =>
+      (activeCategory === 'All' || p.category === activeCategory) &&
+      (p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+    );
+    const grid = document.getElementById('product-grid');
+    if (list.length === 0) {
+      grid.innerHTML = `<p style="grid-column:1/-1;color:var(--soil-700);padding:40px 0;text-align:center;">No produce matches "${q}". Try another search.</p>`;
+      return;
+    }
+    grid.innerHTML = list.map(p => {
+      const pred = AI.predictPrice(p);
+      const farmer = findFarmer(p.farmerId);
+      return `<div class="product-card">
+        <div class="product-media" onclick="openDetail('${p.id}')" style="cursor:pointer;">
+          <span>${p.emoji}</span>
+          <span class="quality-badge pill ${p.quality}">${p.quality}</span>
+        </div>
+        <div class="product-body">
+          <div class="farmer-tag">${farmer.name} · ${farmer.location}</div>
+          <h4>${p.name}</h4>
+          <div class="meta">Harvested ${p.harvest} · ${p.stock} ${p.unit} available</div>
+          <span class="ai-tag">🧠 AI fair range ₹${pred.low}–₹${pred.high}</span>
+          <div class="price-line">
+            <span class="amt">₹${p.basePrice}</span>
+            <span class="unit">/ ${p.unit}</span>
+          </div>
+          <button class="btn btn-primary btn-block btn-sm" onclick="quickAdd('${p.id}')">Add to Cart</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function quickAdd(id) {
+    Store.addToCart(id, 1);
+    renderCartBadge();
+    const p = findProduct(id);
+    toast(`${p.name} added to cart`, p.emoji);
+  }
+
+  function openDetail(id) {
+    const p = findProduct(id);
+    const farmer = findFarmer(p.farmerId);
+    const pred = AI.predictPrice(p);
+    const demand = AI.forecastDemand(p);
+    document.getElementById('detail-body').innerHTML = `
+      <div style="font-size:64px;text-align:center;margin-bottom:14px;">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <p style="color:var(--soil-700);font-size:13.5px;margin:6px 0 16px;">${farmer.name} · ${farmer.location} · ${farmer.verified?'✅ Verified farmer':''}</p>
+      <div class="chip-row" style="margin-bottom:16px;">
+        <span class="pill ${p.quality}">${p.quality} quality</span>
+        <span class="pill ${demand.level.toLowerCase()==='high'?'high':demand.level.toLowerCase()==='low'?'low':'med'}">Demand: ${demand.level}</span>
+      </div>
+      <div class="ai-card" style="margin-bottom:18px;">
+        <div class="eyebrow">AI Price Check</div>
+        <p>Fair market range for ${p.name} right now is <b style="color:#fff;">₹${pred.low}–₹${pred.high}/${p.unit}</b>. This farmer is listing at ₹${p.basePrice}.</p>
+      </div>
+      <div class="form-row">
+        <label>Quantity (${p.unit})</label>
+        <input id="detail-qty" type="number" value="1" min="1">
+      </div>
+      <button class="btn btn-marigold btn-block" onclick="addFromDetail('${p.id}')">Add to Cart — ₹<span id="detail-price">${p.basePrice}</span></button>
+    `;
+    document.getElementById('detail-modal').classList.add('open');
+    document.getElementById('detail-qty').addEventListener('input', (e) => {
+      document.getElementById('detail-price').textContent = (parseInt(e.target.value||1) * p.basePrice);
+    });
+  }
+  function closeDetail(){ document.getElementById('detail-modal').classList.remove('open'); }
+  document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id==='detail-modal') closeDetail(); });
+
+  function addFromDetail(id) {
+    const qty = parseInt(document.getElementById('detail-qty').value) || 1;
+    Store.addToCart(id, qty);
+    renderCartBadge();
+    closeDetail();
+    toast('Added to cart');
+  }
+
+  /* ---- cart drawer ---- */
+  function openCart() { renderCart(); document.getElementById('cart-drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+  function closeCart() { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+  function renderCart() {
+    const cart = Store.getCart();
+    const wrap = document.getElementById('cart-items');
+    if (cart.length === 0) {
+      wrap.innerHTML = `<div class="empty-cart">🧺<br><br>Your cart is empty.</div>`;
+      document.getElementById('cart-total').textContent = '₹0';
+      return;
+    }
+    let total = 0;
+    wrap.innerHTML = cart.map(c => {
+      const p = findProduct(c.productId);
+      const lineTotal = p.basePrice * c.qty;
+      total += lineTotal;
+      return `<div class="cart-item">
+        <span class="em">${p.emoji}</span>
+        <div style="flex:1;">
+          <div class="ci-name">${p.name}</div>
+          <div class="ci-meta">₹${p.basePrice}/${p.unit}</div>
+          <div class="qty-ctrl">
+            <button onclick="changeQty('${p.id}', ${c.qty - 1})">−</button>
+            <span>${c.qty}</span>
+            <button onclick="changeQty('${p.id}', ${c.qty + 1})">+</button>
+          </div>
+        </div>
+        <div style="font-family:var(--font-mono);font-weight:600;">₹${lineTotal}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('cart-total').textContent = `₹${total.toLocaleString('en-IN')}`;
+  }
+  function changeQty(id, qty) { Store.updateQty(id, qty); renderCart(); renderCartBadge(); }
+
+  function checkout() {
+    if (Store.cartCount() === 0) { toast('Your cart is empty'); return; }
+    Store.clearCart();
+    closeCart();
+    renderCartBadge();
+    toast('Order placed! The farmer has been notified.', '✅');
+  }
+
+  function logout() { Store.clearSession(); window.location.href = 'index.html'; }
+
+  renderChips();
+  renderRecommendations();
+  renderProducts();
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Direct — AI Farm-to-Customer Platform</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="index.html" class="brand">Farm Direct</a>
+    <div class="nav-links">
+      <a href="index.html#ai">AI Engine</a>
+      <a href="index.html#how">How it works</a>
+      <a href="marketplace.html">Marketplace</a>
+    </div>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-ghost btn-sm">Log in</a>
+      <a href="login.html" class="btn btn-marigold btn-sm">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Sell it fresh.<br>Buy it <em>straight</em><br>from the field.</h1>
+      <p class="lede">Farm Direct connects farmers directly with customers — no middlemen — while AI handles price recommendations, demand forecasts, and produce quality checks behind the scenes.</p>
+      <div class="hero-actions">
+        <a href="login.html?role=farmer" class="btn btn-marigold">I'm a Farmer</a>
+        <a href="login.html?role=customer" class="btn btn-ghost" style="border-color:rgba(250,246,236,0.35);color:#fff;">I'm a Customer</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>3</b><span>Verified farmers live</span></div>
+        <div class="hero-stat"><b>9</b><span>Produce lines tracked</span></div>
+        <div class="hero-stat"><b>5</b><span>AI modules running</span></div>
+      </div>
+    </div>
+
+    <div class="price-board">
+      <div class="price-board-head">
+        <span class="tag">AI Price Board</span>
+        <span class="live"><span class="live-dot"></span> Live</span>
+      </div>
+      <div id="board-rows"></div>
+    </div>
+  </div>
+</header>
+
+<section id="ai">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">The AI Layer</div>
+      <h2>What makes this more than a marketplace</h2>
+      <p>Five AI-assisted modules run underneath the buying and selling experience — recommending prices, forecasting demand, and flagging produce quality so both sides make better decisions.</p>
+    </div>
+    <div class="grid-3" style="margin-bottom:22px;">
+      <div class="ai-card">
+        <div class="eyebrow">Module 1</div>
+        <h3>💰 Price Prediction</h3>
+        <p>Suggests a fair selling price using historical prices, demand, season, location, and current supply. The farmer always decides whether to accept it.</p>
+        <div class="example">Tomato: farmer price ₹25/kg → AI range ₹27–₹30/kg</div>
+      </div>
+      <div class="ai-card">
+        <div class="eyebrow">Module 2</div>
+        <h3>📈 Demand Forecasting</h3>
+        <p>Predicts which produce customers are likely to want next, using past orders, search activity, and seasonal trends.</p>
+        <div class="example">Expected tomato demand next week: High</div>
+      </div>
+      <div class="ai-card">
+        <div class="eyebrow">Module 3</div>
+        <h3>📷 Quality Classification</h3>
+        <p>An image-assisted classifier gives produce an indicative freshness label — Fresh, Average, or Poor — to support (not replace) the farmer's own judgement.</p>
+        <div class="example">Prototype note: appearance-based, not a food-safety test</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="ai-card">
+        <div class="eyebrow">Module 4</div>
+        <h3>🧠 Recommendation Engine</h3>
+        <p>Recommends produce to customers based on previous purchases, searches, location, season, and price range.</p>
+        <div class="example">Search: "organic vegetables" → Carrot, Tomato, Spinach, Cucumber</div>
+      </div>
+      <div class="ai-card">
+        <div class="eyebrow">Module 5</div>
+        <h3>💬 AI Farmer Assistant</h3>
+        <p>A chat assistant farmers can ask things like "what price should I sell my tomatoes for?" or "what's in high demand this week?"</p>
+        <div class="example">Try it live in the Farmer Dashboard</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--paper-100);">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Two sides, one platform</div>
+      <h2>Built for how each side actually works</h2>
+    </div>
+    <div class="grid-2">
+      <div class="role-card farmer">
+        <div class="icon">👨‍🌾</div>
+        <h3>For Farmers</h3>
+        <p>List your produce, get an AI-recommended price, and see what's in demand before you harvest.</p>
+        <ul>
+          <li>Add produce with photos & quantity</li>
+          <li>AI price & demand suggestions</li>
+          <li>Track orders and sales in one view</li>
+          <li>Ask the AI assistant anything</li>
+        </ul>
+        <a href="login.html?role=farmer" class="btn btn-primary btn-block">Enter Farmer Dashboard</a>
+      </div>
+      <div class="role-card customer">
+        <div class="icon">🛒</div>
+        <h3>For Customers</h3>
+        <p>Browse fresh produce straight from nearby farms, compare prices, and order in a few taps.</p>
+        <ul>
+          <li>Search & filter by category</li>
+          <li>See freshness and farmer details</li>
+          <li>Personalised recommendations</li>
+          <li>Track your order to delivery</li>
+        </ul>
+        <a href="marketplace.html" class="btn btn-primary btn-block">Browse Marketplace</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">End to end</div>
+      <h2>How an order flows through the platform</h2>
+    </div>
+    <div class="flow-strip">
+      <span class="step">Farmer lists produce</span><span class="arrow">→</span>
+      <span class="step">AI suggests price &amp; quality label</span><span class="arrow">→</span>
+      <span class="step">Customer discovers via search / AI picks</span><span class="arrow">→</span>
+      <span class="step">Order placed &amp; paid</span><span class="arrow">→</span>
+      <span class="step">Pickup / delivery</span><span class="arrow">→</span>
+      <span class="step">Rating feeds back into AI</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="brand" style="margin-bottom:8px;">Farm Direct</div>
+      <small>AI-powered farm-to-customer platform · student project prototype</small>
+    </div>
+    <div style="display:flex;gap:32px;">
+      <a href="marketplace.html">Marketplace</a>
+      <a href="login.html?role=farmer">Farmer login</a>
+      <a href="login.html?role=customer">Customer login</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/ai.js"></script>
+<script>
+  const boardEl = document.getElementById('board-rows');
+  const featured = ['Tomato','Mango (Alphonso)','Spinach','Cucumber'].map(n => PRODUCTS.find(p=>p.name===n));
+  boardEl.innerHTML = featured.map(p => {
+    const pred = AI.predictPrice(p);
+    const arrow = pred.direction === 'up' ? '▲' : '▼';
+    return `<div class="board-row">
+      <span class="emoji">${p.emoji}</span>
+      <span class="name">${p.name}<small>${p.unit}</small></span>
+      <span class="price">₹${pred.mid}</span>
+      <span class="delta ${pred.direction}">${arrow} ${pred.pct}%</span>
+    </div>`;
+  }).join('');
+</script>
+</body>
+</html>
